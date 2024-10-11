@@ -41,7 +41,7 @@ def get_author_ids():
     author_ids = {}
 
     # Query to retrieve author names and ids
-    query = "SELECT id, namee FROM authors"
+    query = "SELECT author_id, namee FROM authors"
     mycursor.execute(query)
 
     # Fetch all results and store in dictionary
@@ -51,13 +51,12 @@ def get_author_ids():
     # Close the cursor and connection
     mycursor.close()
     mydb.close()
-
-    print(type(author_ids))
     return author_ids
 
 
 
 def insert_quotes(quotes_list):
+
 
     mydb = mysql.connector.connect(host = 'localhost', user = 'root', passwd = 'root', database='quotes_db')
 
@@ -66,16 +65,19 @@ def insert_quotes(quotes_list):
     # Retrieve author ids
     author_ids = get_author_ids()
 
-    print(author_ids)
+    # author_ids has the form ('name': id, ...)
+    print(author_ids['Albert Einstein'])
 
     quotes_withIDs = []
 
-    for quote in quotes_list: 
-        quote = quote + tuple(author_ids.get(quote[1]))
-        quotes_withIDs.append(quote)
-        print(type(quotes_withIDs))
-        print(len(quotes_withIDs[0]))
-        print(quote)
+    for i in range(len(quotes_list)):
+        try:
+            quote = quotes_list[i]
+            quote = quote + (author_ids[quote[1]],)
+            quotes_withIDs.append(quote)
+            print(quote)
+        except: 
+            pass
 
     try: 
 
@@ -91,6 +93,34 @@ def insert_quotes(quotes_list):
     except mysql.connector.Error as err:
         return f"Error: {err}"
     
+    finally:
+        # Ensure the cursor and database connection are closed
+        if mycursor:
+            mycursor.close()
+        if mydb:
+            mydb.close()
+
+def prueba_Insert(): 
+    mydb = mysql.connector.connect(host = 'localhost', user = 'root', passwd = 'root', database='quotes_db')
+
+    mycursor = mydb.cursor()
+
+    author_ids = get_author_ids()
+
+    print(author_ids)
+    
+    try:
+        query = "INSERT INTO quotes (quote, author, favorite, author_id) VALUES ('Prueba 3', 'Albert Einstein', 0, 1);"
+        mycursor.execute(query)
+
+        mydb.commit()
+
+        mycursor.close()
+        mydb.close()
+        return('Quote einstein inserted correctly inserted succesfully.')
+    except mysql.connector.Error as err:
+        return f"Error: {err}"
+
     finally:
         # Ensure the cursor and database connection are closed
         if mycursor:
